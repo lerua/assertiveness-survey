@@ -1,3 +1,10 @@
 {
-  "results": []
+    "users": [
+        {
+          "id": 1,
+          "username": "Agnes",
+          "password": "Nanou"
+        }
+      ],
+    "results": []
 }

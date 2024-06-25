@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import Login from './Login';
 
 const questions = [
     "Je dis souvent oui, alors que je voudrais dire non.",
@@ -81,6 +82,7 @@ const AssertivenessSurvey = () => {
   const [pastResults, setPastResults] = useState([]);
   const [showPastResults, setShowPastResults] = useState(false);
   const [userName, setUserName] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const calculateScores = useCallback(() => {
     const scores = {};
@@ -141,6 +143,16 @@ const AssertivenessSurvey = () => {
   const handleAnswer = (value) => {
     setAnswers({ ...answers, [currentQuestion]: value });
     setCurrentQuestion(currentQuestion + 1);
+  };
+
+  const handleLogin = (user) => {
+    setIsAuthenticated(true);
+    // You might want to store the user information in state here
+  };
+  
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setShowPastResults(false);
   };
 
   const renderQuestion = () => (
@@ -254,47 +266,61 @@ const AssertivenessSurvey = () => {
     <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-4xl font-bold text-center mb-12">Autodiagnostic Assertivité</h1>
-        {currentQuestion === -1 && renderUserNameInput()}
-        {currentQuestion >= 0 && !showResults && !showPastResults && renderQuestion()}
-        {showResults && !showPastResults && renderResults(calculateScores(), userName)}
-        {showPastResults && renderPastResults()}
-        {currentQuestion >= 0 && !showResults && !showPastResults && (
-          <div className="mt-8">
-            <div className="bg-white rounded-full h-2 w-full">
-              <div
-                className="bg-blue-500 h-2 rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${(currentQuestion / questions.length) * 100}%` }}
-              ></div>
+        {!isAuthenticated && showPastResults ? (
+          <Login onLogin={handleLogin} />
+        ) : (
+          <>
+            {currentQuestion === -1 && renderUserNameInput()}
+            {currentQuestion >= 0 && !showResults && !showPastResults && renderQuestion()}
+            {showResults && !showPastResults && renderResults(calculateScores(), userName)}
+            {showPastResults && renderPastResults()}
+            {currentQuestion >= 0 && !showResults && !showPastResults && (
+              <div className="mt-8">
+                <div className="bg-white rounded-full h-2 w-full">
+                  <div
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${(currentQuestion / questions.length) * 100}%` }}
+                  ></div>
+                </div>
+                <p className="text-center mt-2 text-gray-600">
+                  {currentQuestion} / {questions.length} questions répondues
+                </p>
+              </div>
+            )}
+            <div className="mt-8 flex justify-center space-x-4">
+              {!showResults && !showPastResults && currentQuestion >= 0 && (
+                <button
+                  onClick={() => setShowPastResults(true)}
+                  className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-200"
+                >
+                  Voir tous les résultats
+                </button>
+              )}
+              {(showResults || showPastResults) && (
+                <button
+                  onClick={() => {
+                    setShowResults(false);
+                    setShowPastResults(false);
+                    setCurrentQuestion(-1);
+                    setAnswers({});
+                    setUserName('');
+                  }}
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-200"
+                >
+                  Nouveau questionnaire
+                </button>
+              )}
+              {isAuthenticated && (
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full transition duration-200"
+                >
+                  Logout
+                </button>
+              )}
             </div>
-            <p className="text-center mt-2 text-gray-600">
-              {currentQuestion} / {questions.length} questions répondues
-            </p>
-          </div>
+          </>
         )}
-        <div className="mt-8 flex justify-center space-x-4">
-          {!showResults && !showPastResults && currentQuestion >= 0 && (
-            <button
-              onClick={() => setShowPastResults(true)}
-              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-200"
-            >
-              Voir tous les résultats
-            </button>
-          )}
-          {(showResults || showPastResults) && (
-            <button
-              onClick={() => {
-                setShowResults(false);
-                setShowPastResults(false);
-                setCurrentQuestion(-1);
-                setAnswers({});
-                setUserName('');
-              }}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-200"
-            >
-              Nouveau questionnaire
-            </button>
-          )}
-        </div>
       </div>
     </div>
   );
