@@ -126,7 +126,7 @@ const AssertivenessSurvey = () => {
       setShowResults(true);
       saveResults();
     }
-  }, [currentQuestion, questions.length, saveResults]);
+  }, [currentQuestion, saveResults]);
 
   const fetchResults = async () => {
     try {
