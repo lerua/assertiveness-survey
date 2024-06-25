@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -82,41 +82,15 @@ const AssertivenessSurvey = () => {
   const [showPastResults, setShowPastResults] = useState(false);
   const [userName, setUserName] = useState('');
 
-  useEffect(() => {
-    fetchResults();
-  }, []);
-
-  useEffect(() => {
-    if (currentQuestion >= questions.length) {
-      setShowResults(true);
-      saveResults();
-    }
-  }, [currentQuestion]);
-
-  const fetchResults = async () => {
-    try {
-      const response = await fetch(`${API_URL}/results`);
-      const data = await response.json();
-      setPastResults(data);
-    } catch (error) {
-      console.error('Error fetching results:', error);
-    }
-  };
-
-  const handleAnswer = (value) => {
-    setAnswers({ ...answers, [currentQuestion]: value });
-    setCurrentQuestion(currentQuestion + 1);
-  };
-
-  const calculateScores = () => {
+  const calculateScores = useCallback(() => {
     const scores = {};
     Object.entries(scoringMap).forEach(([category, questionIndices]) => {
       scores[category] = questionIndices.reduce((sum, index) => sum + (answers[index - 1] ? 1 : 0), 0);
     });
     return scores;
-  };
+  }, [answers]);
 
-  const saveResults = async () => {
+  const saveResults = useCallback(async () => {
     const scores = calculateScores();
     const newResult = {
       date: new Date().toISOString(),
@@ -141,6 +115,32 @@ const AssertivenessSurvey = () => {
     } catch (error) {
       console.error('Error saving results:', error);
     }
+  }, [calculateScores, userName]);
+
+  useEffect(() => {
+    fetchResults();
+  }, []);
+
+  useEffect(() => {
+    if (currentQuestion >= questions.length) {
+      setShowResults(true);
+      saveResults();
+    }
+  }, [currentQuestion, questions.length, saveResults]);
+
+  const fetchResults = async () => {
+    try {
+      const response = await fetch(`${API_URL}/results`);
+      const data = await response.json();
+      setPastResults(data);
+    } catch (error) {
+      console.error('Error fetching results:', error);
+    }
+  };
+
+  const handleAnswer = (value) => {
+    setAnswers({ ...answers, [currentQuestion]: value });
+    setCurrentQuestion(currentQuestion + 1);
   };
 
   const renderQuestion = () => (
